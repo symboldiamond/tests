@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vigenère Cipher</title>
+    <style>
+        /* --- CSS STYLES (style.css content) --- */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            resize: none;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            flex-grow: 1;
+            padding: 12px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:first-child {
+            background-color: #4CAF50; /* Green for Encrypt */
+            color: white;
+        }
+
+        button:last-child {
+            background-color: #008CBA; /* Blue for Decrypt */
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        #outputText {
+            background-color: #eee;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Vigenère Cipher</h1>
+        <p>A stronger cipher using a keyword for encryption.</p>
+
+        <label for="inputText">Input Text:</label>
+        <textarea id="inputText" rows="4" placeholder="Enter your secret message here..."></textarea>
+
+        <label for="key">Keyword (e.g., 'SECRET'):</label>
+        <input type="text" id="key" value="CIPHERKEY" placeholder="Enter a word or phrase (letters only)">
+
+        <div class="buttons">
+            <button onclick="processText('encrypt')">Encrypt 🔒</button>
+            <button onclick="processText('decrypt')">Decrypt 🔓</button>
+        </div>
+
+        <label for="outputText">Output Text:</label>
+        <textarea id="outputText" rows="4" readonly placeholder="Result will appear here..."></textarea>
+    </div>
+
+    <script>
+        // --- JAVASCRIPT LOGIC (script.js content) ---
+
+        /**
+         * Normalizes a keyword by converting it to uppercase and keeping only A-Z characters.
+         */
+        function normalizeKey(key) {
+            return key.toUpperCase().replace(/[^A-Z]/g, '');
+        }
+
+        /**
+         * Encrypts or Decrypts text using the Vigenère Cipher.
+         */
+        function vigenereCipher(str, key, type) {
+            let result = '';
+            const normalizedKey = normalizeKey(key);
+            let keyIndex = 0;
+
+            if (normalizedKey.length === 0) {
+                return "Error: Keyword must contain at least one letter.";
+            }
+
+            for (let i = 0; i < str.length; i++) {
+                let char = str[i];
+                let charCode = char.charCodeAt(0);
+                let baseCharCode = 0;
+
+                // Determine case and base ASCII code
+                if (char >= 'A' && char <= 'Z') {
+                    baseCharCode = 'A'.charCodeAt(0);
+                } else if (char >= 'a' && char <= 'z') {
+                    baseCharCode = 'a'.charCodeAt(0);
+                } else {
+                    // Non-alphabetic characters are preserved
+                    result += char;
+                    continue;
+                }
+
+                // Get the shift amount from the current keyword letter (A=0, B=1, ...)
+                const keyChar = normalizedKey[keyIndex % normalizedKey.length];
+                let shift = keyChar.charCodeAt(0) - 'A'.charCodeAt(0);
+
+                // For decryption, invert the shift
+                if (type === 'decrypt') {
+                    // Modular arithmetic for reverse shift: (X - S) mod 26 = (X + 26 - S) mod 26
+                    shift = (26 - shift) % 26;
+                }
+
+                // Apply the shift and wrap around (modulo 26)
+                let originalOffset = charCode - baseCharCode;
+                let newOffset = (originalOffset + shift) % 26;
+                let newCharCode = newOffset + baseCharCode;
+
+                result += String.fromCharCode(newCharCode);
+
+                // Only advance the key index if an alphabetic character was processed
+                keyIndex++;
+            }
+
+            return result;
+        }
+
+        function processText(type) {
+            const inputText = document.getElementById('inputText').value;
+            const key = document.getElementById('key').value;
+            const outputTextarea = document.getElementById('outputText');
+
+            if (inputText.trim() === '') {
+                outputTextarea.value = "Error: Please enter text to process.";
+                return;
+            }
+
+            // Perform the cipher operation
+            const output = vigenereCipher(inputText, key, type);
+
+            // Display the result
+            outputTextarea.value = output;
+        }
+    </script>
+</body>
+</html>
